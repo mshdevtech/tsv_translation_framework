@@ -242,7 +242,60 @@ python scripts/translation_report.py --project-root translation/<project>
 
 ### Pre-commit Integration
 
-You can automate translation syncs with a pre-commit hook. See `example_subproject/.pre-commit-config.yaml.example` for a template.
+You can automate translation syncs with a pre-commit hook to ensure your translations are always synced to RPFM project folder.
+
+#### Installation
+
+1. **Install pre-commit:**
+   ```bash
+   pip install pre-commit
+   ```
+
+2. **Set up the hook in your translation project:**
+   ```bash
+   # Copy the example config
+   cp .pre-commit-config.yaml.example .pre-commit-config.yaml
+   
+   # Install the git hook
+   pre-commit install
+   ```
+
+#### Configuration
+
+The `.pre-commit-config.yaml` file should look like this:
+
+```yaml
+repos:
+  - repo: local
+    hooks:
+      - id: sync-translation
+        name: Sync Translation
+        pass_filenames: false
+        entry: python ../../scripts/sync_translation.py --project-root .
+        language: system
+        types: [file]
+```
+
+#### Usage
+
+Once installed, the pre-commit hook will automatically:
+- Run `sync_translation.py` before each commit
+- Ensure your translation files are synced to the target directory
+- Block commits if sync fails
+
+**Manual execution:**
+```bash
+# Run pre-commit on all files
+pre-commit run --all-files
+
+# Run specific hook
+pre-commit run sync-translation
+
+# Skip hooks for this commit
+git commit -m "Your message" --no-verify
+```
+
+**Note:** Adjust the path in the config file (`../../scripts/`) based on your project's location relative to the framework root.
 
 ---
 
