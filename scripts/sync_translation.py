@@ -34,6 +34,7 @@ from pathlib import Path
 from helpers import add_project_root_arg, read_config, resolve_path
 
 IGNORE_NAMES = {
+    "_upstream", "_obsolete", "_temp",
     ".git", ".gitignore", ".gitattributes", ".gitmodules",
     ".env", ".pre-commit-config.yaml", 'run',
     ".DS_Store", "Thumbs.db",
@@ -46,6 +47,8 @@ def should_ignore(name: str) -> bool:
 def clear_folder(dst: Path, src: Path, dry_run: bool = False):
     """Delete only those entries in dst that also exist in src (protects other files like .git)."""
     for name in os.listdir(src):
+        if should_ignore(name):
+            continue
         src_path = src / name
         dst_path = dst / name
         if dst_path.exists():
