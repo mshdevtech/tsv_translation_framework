@@ -8,19 +8,19 @@ unescape_quotes.py
 • Does not change other columns, row order, or service rows.
 
 Usage:
-    # 1) By default, go through all *.loc.tsv files in DEFAULT_DIR
+    # 1) By default, go through all *.loc.tsv files in text/db
     python unescape_quotes.py
 
     # 2) Specify file(s) or directory(s)
-    python unescape_quotes.py translation/text/db/names.loc.tsv
-    python unescape_quotes.py translation/text/db  other_dir/
+    python unescape_quotes.py text/db/names.loc.tsv
+    python unescape_quotes.py text/db  other_dir/
 """
 
 from pathlib import Path
 import sys
 import pandas as pd
-
-DEFAULT_DIR = Path("translation/text/db")  # change if necessary
+import argparse
+from helpers import read_config, add_project_root_arg, resolve_path
 
 # Completely disable any "quoting" when reading/writing
 QUOTE_NONE = 3         # equivalent csv.QUOTE_NONE (without importing csv)
@@ -63,18 +63,23 @@ def process_file(path: Path) -> int:
     return changed
 
 def main():
-    args = sys.argv[1:]
-    files: list[Path] = []
+    ap = argparse.ArgumentParser(description="Unescape quotes in translation TSV files.")
+    add_project_root_arg(ap)
+    ap.add_argument("paths", nargs="*", help="Files or directories to process (default: text/db)")
+    args = ap.parse_args()
 
-    if args:
-        for a in args:
-            p = Path(a)
+    cfg = read_config(args.project_root)
+
+    files: list[Path] = []
+    if args.paths:
+        for a in args.paths:
+            p = resolve_path(cfg.project_root, a)
             if p.is_dir():
                 files.extend(sorted(p.glob("*.loc.tsv")))
             else:
                 files.append(p)
     else:
-        files = sorted(DEFAULT_DIR.glob("*.loc.tsv"))
+        files = sorted(cfg.translation_db.glob("*.loc.tsv"))
 
     if not files:
         print("No files found.")

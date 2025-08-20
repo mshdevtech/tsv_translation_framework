@@ -40,9 +40,10 @@ AFTER RUNNING:
 
 import os
 import shutil
-import sys
 from pathlib import Path
 from typing import List, Tuple, Set
+import argparse
+from helpers import read_config, add_project_root_arg, resolve_path
 
 def find_lua_files(directory: Path) -> List[Path]:
     """
@@ -152,24 +153,27 @@ def sync_lua_files(upstream_dir: Path, translation_dir: Path) -> Tuple[int, int,
     
     return files_copied, files_skipped, deleted_files
 
+"""
+Main function that orchestrates the sync process.
+
+This function:
+1. Sets up the directory paths
+2. Calls the sync function
+3. Displays a comprehensive summary
+4. Provides guidance for next steps
+"""
 def main():
-    """
-    Main function that orchestrates the sync process.
-    
-    This function:
-    1. Sets up the directory paths
-    2. Calls the sync function
-    3. Displays a comprehensive summary
-    4. Provides guidance for next steps
-    """
-    # Get script directory and project root
-    script_dir = Path(__file__).parent
-    project_root = script_dir.parent
-    
+    ap = argparse.ArgumentParser(description="Sync Lua files from upstream to translation folder.")
+    add_project_root_arg(ap)
+    ap.add_argument("--upstream-dir", help="Path to upstream/en directory (overrides .env)")
+    ap.add_argument("--translation-dir", help="Path to translation directory (overrides .env)")
+    args = ap.parse_args()
+
     # Define directories relative to project root
-    upstream_dir = project_root / "_upstream" / "en"
-    translation_dir = project_root / "translation"
-    
+    cfg = read_config(args.project_root)
+    upstream_dir = resolve_path(cfg.project_root, args.upstream_dir) if args.upstream_dir else (cfg.upstream_db.parent.parent if cfg.upstream_db else cfg.project_root / "_upstream/en")
+    translation_dir = resolve_path(cfg.project_root, args.translation_dir) if args.translation_dir else (cfg.translation_db.parent.parent if cfg.translation_db else cfg.project_root / "translation")
+
     # Display script header and configuration
     print("Lua File Sync Script")
     print("=" * 50)

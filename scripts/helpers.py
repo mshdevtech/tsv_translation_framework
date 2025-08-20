@@ -37,13 +37,20 @@ class Config:
     patch_db: Path | None      # optional
     obsolete_dir: Path         # e.g. _obsolete
     temp_dir: Path | None      # optional
-    dst: Path | None           # used by sync; optional
+    dir_up1: Path | None       # optional
+    dir_up2: Path              # e.g. _upstream/en/text/db
+    split_loc_file: Path       # used by patch_lua.py
+    patch_lua_file: Path       # used by split_loc_master.py
+    split_loc_dir: Path        # used by split_loc_master.py
+    dst: Path | None           # used by sync_translation.py; optional
 
 DEFAULTS = {
     "UPSTREAM_DB":    "_upstream/en/text/db",
     "TRANSLATION_DB": "translation/text/db",
     "OBSOLETE_DIR":   "_obsolete",
     "TEMP_DIR":       "_temp",
+    "DIR_UP2":       "_upstream/en/text/db",
+    "PATH_LUA_FILE":       "lua_scripts/frontend_strings.lua",
     # "DST":          (no default; usually per-user)
     # "PATCH_DB":     (optional)
 }
@@ -65,6 +72,11 @@ def read_config(project_root: str | Path = ".", env_file: str | Path | None = No
     obsolete_dir   = resolve_path(pr, getv("OBSOLETE_DIR", "OBSOLETE_DIR"))
     patch_db       = resolve_opt(pr, getv("PATCH_DB"))
     temp_dir       = resolve_opt(pr, getv("TEMP_DIR", "TEMP_DIR"))
+    dir_up1        = resolve_opt(pr, getv("DIR_UP1"))
+    dir_up2        = resolve_opt(pr, getv("DIR_UP2", "DIR_UP2"))
+    patch_lua_file = resolve_opt(pr, getv("PATH_LUA_FILE", "PATH_LUA_FILE"))
+    split_loc_file = resolve_opt(pr, getv("SPLIT_LOC_FILE"))
+    split_loc_dir  = resolve_opt(pr, getv("SPLIT_LOC_DIR"))
     dst            = resolve_opt(pr, getv("DST"))  # may be None; scripts can require it
 
     return Config(
@@ -75,5 +87,10 @@ def read_config(project_root: str | Path = ".", env_file: str | Path | None = No
         patch_db=patch_db,
         obsolete_dir=obsolete_dir,
         temp_dir=temp_dir,
+        dir_up1=dir_up1,
+        dir_up2=dir_up2,
+        patch_lua_file=patch_lua_file,
+        split_loc_file=split_loc_file,
+        split_loc_dir=split_loc_dir,
         dst=dst,
     )

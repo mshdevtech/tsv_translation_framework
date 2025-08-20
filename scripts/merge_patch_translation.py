@@ -21,26 +21,12 @@ Algorithm for each *.loc.tsv:
 4. Save the file without changing the order of rows.
 """
 
-import sys, os
+import sys
 from pathlib import Path
 import pandas as pd
+import argparse
 
-# Ensure the script can import from the current directory
-THIS_DIR = Path(__file__).resolve().parent
-if str(THIS_DIR) not in sys.path:
-    sys.path.insert(0, str(THIS_DIR))
-
-from helpers import load_env, resolve_path
-
-PROJECT_ROOT = Path(".").resolve()
-
-UPSTREAM_DB = os.environ.get("UPSTREAM_DB")
-PATCH_DB = os.environ.get("PATCH_DB")
-TRANSLATION_DB = os.environ.get("TRANSLATION_DB")
-
-ROOT_EN     = resolve_path(PROJECT_ROOT, UPSTREAM_DB)
-ROOT_PATCH  = resolve_path(PROJECT_ROOT, PATCH_DB)
-ROOT_MAIN   = resolve_path(PROJECT_ROOT, TRANSLATION_DB)
+from helpers import read_config, add_project_root_arg, resolve_path
 
 def load(p: Path) -> pd.DataFrame:
     """We read TSV, we don't convert anything to NaN."""
@@ -49,49 +35,65 @@ def load(p: Path) -> pd.DataFrame:
         keep_default_na=False, na_filter=False
     )
 
-def process(file_name: str) -> None:
-    path_en    = ROOT_EN   / file_name
-    path_patch = ROOT_PATCH / file_name
-    path_main  = ROOT_MAIN / file_name
+def main():
+    ap = argparse.ArgumentParser(description="Merge patch translations into main translation files.")
+    add_project_root_arg(ap)
+    args, extra = ap.parse_known_args()
 
-    if not (path_en.exists() and path_main.exists() and path_patch.exists()):
-        print(f"⚠️  Skip {file_name} — the file is not found in all three directories.")
-        return
+    cfg = read_config(args.project_root)
+    root_en = cfg.upstream_db
+    root_patch = cfg.patch_db
+    root_main = cfg.translation_db
 
-    en    = load(path_en)
-    main  = load(path_main)
-    patch = load(path_patch)
+    if not root_patch:
+        print("[ERROR] PATCH_DB not set in .env or arguments.")
+        sys.exit(1)
 
-    # ── filters, but now we make *copies*, the main DF remains full
-    sub_en    = en[  en["key"].str.strip()   != ""].iloc[1:]
-    sub_main  = main[main["key"].str.strip() != ""].iloc[1:]
-    sub_patch = patch[patch["key"].str.strip() != ""].iloc[1:]
+    def process(file_name: str) -> None:
+        path_en    = root_en   / file_name
+        path_patch = root_patch / file_name
+        path_main  = root_main / file_name
 
-    # we perform a quick lookup by key.
-    en_lookup    = dict(zip(sub_en["key"],    sub_en["text"]))
-    patch_lookup = dict(zip(sub_patch["key"], sub_patch["text"]))
+        if not (path_en.exists() and path_main.exists() and path_patch.exists()):
+            print(f"⚠️  Skip {file_name} — the file is not found in all three directories.")
+            return
 
-    updated = 0
-    for idx, row in main.iterrows():
-        k = row["key"]
-        text_main   = main.at[idx, "text"]        # take from the FULL DF
-        text_en     = en_lookup.get(k, "")
-        text_patch  = patch_lookup.get(k)
+        en    = load(path_en)
+        main  = load(path_main)
+        patch = load(path_patch)
 
-        if (
-                k and text_patch and text_patch != text_en and
-                (text_main == text_en or text_main == "")
-        ):
-            main.at[idx, "text"] = text_patch
-            updated += 1
+        # ── filters, but now we make *copies*, the main DF remains full
+        sub_en    = en[  en["key"].str.strip()   != ""].iloc[1:]
+        sub_main  = main[main["key"].str.strip() != ""].iloc[1:]
+        sub_patch = patch[patch["key"].str.strip() != ""].iloc[1:]
 
-    if updated:
-        main.to_csv(path_main, sep="\t", index=False, na_rep="")
-        print(f"✅ {file_name}: updated {updated} lines.")
-    else:
-        print(f"–  {file_name}: no translations required.")
+        # we perform a quick lookup by key.
+        en_lookup    = dict(zip(sub_en["key"],    sub_en["text"]))
+        patch_lookup = dict(zip(sub_patch["key"], sub_patch["text"]))
 
-if __name__ == "__main__":
-    targets = sys.argv[1:] or [p.name for p in ROOT_PATCH.glob("*.loc.tsv")]
+        updated = 0
+        for idx, row in main.iterrows():
+            k = row["key"]
+            text_main   = main.at[idx, "text"]        # take from the FULL DF
+            text_en     = en_lookup.get(k, "")
+            text_patch  = patch_lookup.get(k)
+
+            if (
+                    k and text_patch and text_patch != text_en and
+                    (text_main == text_en or text_main == "")
+            ):
+                main.at[idx, "text"] = text_patch
+                updated += 1
+
+        if updated:
+            main.to_csv(path_main, sep="\t", index=False, na_rep="")
+            print(f"✅ {file_name}: updated {updated} lines.")
+        else:
+            print(f"–  {file_name}: no translations required.")
+
+    targets = extra or [p.name for p in root_patch.glob("*.loc.tsv")]
     for fname in targets:
         process(fname)
+
+if __name__ == "__main__":
+    main()

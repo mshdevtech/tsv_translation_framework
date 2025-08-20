@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-validate_tsv.py – This script quickly checks all *.loc.tsv files in the specified folder or in translation/text/db/
+validate_tsv.py – This script quickly checks all *.loc.tsv files in the specified folder or in text/db/
 
 • 3 columns in order: key, text, tooltip
 • key is not empty
@@ -10,7 +10,7 @@ validate_tsv.py – This script quickly checks all *.loc.tsv files in the specif
 The tooltip column is not analyzed – the game needs it, but its content does not interest us.
 
 Usage:
-    python scripts/validate_tsv.py                    # checks translation/text/db/
+    python scripts/validate_tsv.py                    # checks text/db/
     python scripts/validate_tsv.py path/to/folder     # checks the specified folder
 """
 

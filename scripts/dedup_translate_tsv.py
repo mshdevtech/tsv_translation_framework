@@ -30,33 +30,17 @@ The **translate** column is edited by the translator.
 The **keys** column is required by the script - do not change it.
 """
 
-from pathlib import Path
-import sys, csv, os, pandas as pd
+import sys, csv, pandas as pd
+import argparse
 
 from pathlib import Path
+from helpers import read_config, add_project_root_arg, resolve_path
 
-# Ensure the script can import from the current directory
-THIS_DIR = Path(__file__).resolve().parent
-if str(THIS_DIR) not in sys.path:
-    sys.path.insert(0, str(THIS_DIR))
-
-from helpers import load_env, resolve_path
-
-PROJECT_ROOT = Path(".").resolve()
-
-env_file = PROJECT_ROOT / ".env"
-load_env(env_file)
-
-TEMP_DIR = os.environ.get("TEMP_DIR")
-
-DEDUP_DIR = resolve_path(PROJECT_ROOT, TEMP_DIR)          # directory where _dedup-files are stored
-DEDUP_DIR.mkdir(exist_ok=True)
-
-def extract(src: Path) -> None:
+def extract(src: Path, dedup_dir: Path) -> None:
     df = pd.read_csv(src, sep="\t", dtype=str,
                      keep_default_na=False, na_filter=False)
 
-    # групуємо за text
+    # group by 'text'
     g = df.groupby("text")["key"].agg(lambda k: ",".join(sorted(k)))
     dedup_df = (
         g.reset_index()
@@ -65,7 +49,7 @@ def extract(src: Path) -> None:
         .loc[:, ["text", "translate", "keys"]]
     )
 
-    out = DEDUP_DIR / f"{src.stem}._dedup.tsv"
+    out = dedup_dir / f"{src.stem}._dedup.tsv"
     dedup_df.to_csv(out, sep="\t", index=False, quoting=csv.QUOTE_NONE)
     try:
         shown = out.relative_to(Path.cwd())
@@ -101,18 +85,29 @@ def apply(dedup_file: Path, tsv_orig: Path) -> None:
     orig.to_csv(tsv_orig, sep="\t", index=False, quoting=csv.QUOTE_NONE)
     print(f"✅  Updated {tsv_orig.name}: translated {mask.sum()} lines.")
 
-if __name__ == "__main__":
-    if len(sys.argv) < 3:
-        print("Usage:\n"
-              "  extract <src.tsv>\n"
-              "  apply   <_dedup.tsv> <src.tsv>")
-        sys.exit(1)
+def main():
+    ap = argparse.ArgumentParser(description="Deduplicate and apply translations in TSV files.")
+    add_project_root_arg(ap)
+    ap.add_argument("action", choices=["extract", "apply"], help="Action to perform: extract or apply")
+    ap.add_argument("src", nargs="?", help="Source file for extract, or dedup file for apply")
+    ap.add_argument("dst", nargs="?", help="Destination file for apply (original TSV)")
+    args = ap.parse_args()
 
-    action = sys.argv[1]
-    if action == "extract" and len(sys.argv) == 3:
-        extract(Path(sys.argv[2]))
-    elif action == "apply" and len(sys.argv) == 4:
-        apply(Path(sys.argv[2]), Path(sys.argv[3]))
-    else:
-        print("Wrong arguments.")
-        sys.exit(1)
+    cfg = read_config(args.project_root)
+    temp_dir = cfg.temp_dir if cfg.temp_dir else cfg.project_root / "_temp"
+    dedup_dir = temp_dir
+    dedup_dir.mkdir(exist_ok=True)
+
+    if args.action == "extract":
+        if not args.src:
+            print("Please specify the source TSV file for extraction.")
+            sys.exit(1)
+        extract(resolve_path(cfg.project_root, args.src), dedup_dir)
+    elif args.action == "apply":
+        if not args.src or not args.dst:
+            print("Please specify the dedup TSV file and the destination TSV file for apply.")
+            sys.exit(1)
+        apply(resolve_path(cfg.project_root, args.src), resolve_path(cfg.project_root, args.dst))
+
+if __name__ == "__main__":
+    main()

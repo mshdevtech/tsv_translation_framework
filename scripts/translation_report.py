@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """
 translation_report.py
-• compare ORIGIN (_upstream/text/db) and TRANSLATION (translation/text/db)
+• compare ORIGIN (_upstream/text/db) and TRANSLATION (text/db)
 • counts for each file: total, translated, untranslated
 • displays a compact table
 """
 
 from pathlib import Path
 import sys, pandas as pd
-from helpers import read_config
+from helpers import read_config, add_project_root_arg, resolve_path
+import argparse
 
 EXCLUSIONS = ["PLACEHOLDER", "placeholder", "text_rejected"]
 
@@ -19,12 +20,18 @@ def load(p: Path) -> pd.DataFrame:
     return pd.read_csv(p, sep="\t", dtype=str, keep_default_na=False)
 
 def main():
+    ap = argparse.ArgumentParser(description="Report translation progress.")
+    add_project_root_arg(ap)
+    ap.add_argument("--srcdir", help="Source/origin directory (_upstream/en/text/db)")
+    ap.add_argument("--trgdir", help="Translation directory (text/db)")
+    args = ap.parse_args()
+
+    cfg = read_config(args.project_root)
+    src_dir = resolve_path(cfg.project_root, args.srcdir) if args.srcdir else cfg.upstream_db
+    trg_dir = resolve_path(cfg.project_root, args.trgdir) if args.trgdir else cfg.translation_db
+
     rows = []
     grand_total, grand_done = 0, 0
-
-    cfg = read_config()
-    src_dir = cfg.upstream_db
-    trg_dir = cfg.translation_db
 
     for src_path in sorted(src_dir.glob("*.loc.tsv")):
         trg_path = trg_dir / src_path.name
@@ -49,9 +56,7 @@ def main():
         trg = exclude_placeholders(trg)
 
         # combine by key
-        df = src.merge(trg[["key", "text"]], on="key", how="left",
-                       suffixes=("_en", "_loc"))
-
+        df = src.merge(trg[["key", "text"]], on="key", how="left", suffixes=("_en", "_loc"))
         total = len(df)
         translated = (df["text_loc"] != df["text_en"]).sum()
         untranslated = total - translated
@@ -81,8 +86,11 @@ def main():
         print("\n=== SUMMARY ===")
         print(f"Translated {grand_done} lines from {grand_total} "
               f"({overall_pct}% of the total).")
+        return None
     else:
         print("\nNo data to count.")
+        return None
+
 
 if __name__ == "__main__":
     sys.exit(main())
