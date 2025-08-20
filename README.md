@@ -45,6 +45,8 @@ tsv_translation_framework/
 - **Python 3.8+** (recommended)
 - **pip** (Python package manager)
 - **pandas** Python library
+- **Bash shell** (for running shell scripts)
+- **yq** (YAML processor, for multi-repo sync)
 
 ### Install Python Dependencies
 
@@ -233,12 +235,85 @@ python scripts/translation_report.py --project-root translation/<project>
 
 ### Multi-Repo Sync
 
-- Edit `repos.yaml` (see `repos.yaml.example`).
-- Run:
+The framework includes a bash script to automatically sync multiple translation repositories.
 
-  ```bash
-  bash scripts/sync_repos.sh
-  ```
+#### Prerequisites
+
+**Install yq (YAML processor):**
+
+**On Windows (PowerShell):**
+```powershell
+# Using winget
+winget install mikefarah.yq
+
+# Using Chocolatey
+choco install yq
+
+# Using Scoop
+scoop install yq
+```
+
+**On macOS:**
+```bash
+# Using Homebrew
+brew install yq
+
+# Using MacPorts
+sudo port install yq
+```
+
+**On Linux:**
+```bash
+# Ubuntu/Debian
+sudo wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/bin/yq && sudo chmod +x /usr/bin/yq
+
+# CentOS/RHEL/Fedora
+sudo wget https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64 -O /usr/bin/yq && sudo chmod +x /usr/bin/yq
+
+# Using package managers
+# Ubuntu/Debian
+sudo apt install yq
+
+# CentOS/RHEL/Fedora
+sudo dnf install yq
+```
+
+#### Usage
+
+1. **Edit `repos.yaml`** (copy from `repos.yaml.example`):
+   ```yaml
+   repos:
+     - name: my_mod
+       url:  https://github.com/myuser/my_mod.git
+       branch: main
+   ```
+
+2. **Run the sync script:**
+
+   **On Windows (PowerShell):**
+   ```powershell
+   # From framework root
+   bash scripts/sync_repos.sh
+   
+   # Or if you have Git Bash
+   ./scripts/sync_repos.sh
+   ```
+
+   **On macOS/Linux:**
+   ```bash
+   # From framework root
+   bash scripts/sync_repos.sh
+   
+   # Or make executable and run directly
+   chmod +x scripts/sync_repos.sh
+   ./scripts/sync_repos.sh
+   ```
+
+**What it does:**
+- Clones new repositories listed in `repos.yaml`
+- Updates existing repositories with latest changes
+- Maintains the specified branch for each repo
+- Creates the `translation/` directory structure automatically
 
 ### Pre-commit Integration
 
