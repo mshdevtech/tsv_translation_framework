@@ -18,3 +18,6 @@
 
 # Ignore repos.yaml
 repos.yaml
+
+# Ignore py cache
+__pycache__/
