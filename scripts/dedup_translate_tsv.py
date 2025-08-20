@@ -94,7 +94,7 @@ def main():
     args = ap.parse_args()
 
     cfg = read_config(args.project_root)
-    temp_dir = cfg.temp_dir if cfg.temp_dir else cfg.project_root / "_temp"
+    temp_dir = cfg.temp_dir
     dedup_dir = temp_dir
     dedup_dir.mkdir(exist_ok=True)
 

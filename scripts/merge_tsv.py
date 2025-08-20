@@ -28,7 +28,7 @@ THIS_DIR = Path(__file__).resolve().parent
 if str(THIS_DIR) not in sys.path:
     sys.path.insert(0, str(THIS_DIR))
 
-from helpers import load_env, resolve_path
+from helpers import read_config, load_env, resolve_path
 
 # ── Validation functions ─────────────────────────────────────────────────
 def validate_tsv_file(file_path: Path) -> tuple[bool, list[str]]:
@@ -102,18 +102,11 @@ def main():
     ap.add_argument("--project-root", default=".", help="Subproject root (default: .)")
     args = ap.parse_args()
 
-    project_root = Path(args.project_root).resolve()
-    env_file = project_root / ".env"
-    load_env(env_file)
+    cfg = read_config(args.project_root)
 
-
-    upstream_db = os.environ.get("UPSTREAM_DB")
-    translation_db = os.environ.get("TRANSLATION_DB")
-    obsolete_dir = os.environ.get("OBSOLETE_DIR")
-
-    src_dir = resolve_path(project_root, upstream_db)
-    trg_dir = resolve_path(project_root, translation_db)
-    obs_dir = resolve_path(project_root, obsolete_dir)
+    src_dir = cfg.upstream_db
+    trg_dir = cfg.translation_db
+    obs_dir = cfg.obsolete_dir
 
     files_done = total_added = total_removed = total_modified = 0
 

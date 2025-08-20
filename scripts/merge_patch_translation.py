@@ -43,7 +43,7 @@ def main():
     cfg = read_config(args.project_root)
     root_en = cfg.upstream_db
     root_patch = cfg.patch_db
-    root_main = cfg.translation_db
+    root_translation = cfg.translation_db
 
     if not root_patch:
         print("[ERROR] PATCH_DB not set in .env or arguments.")
@@ -52,19 +52,19 @@ def main():
     def process(file_name: str) -> None:
         path_en    = root_en   / file_name
         path_patch = root_patch / file_name
-        path_main  = root_main / file_name
+        path_translation  = root_translation / file_name
 
-        if not (path_en.exists() and path_main.exists() and path_patch.exists()):
+        if not (path_en.exists() and path_translation.exists() and path_patch.exists()):
             print(f"⚠️  Skip {file_name} — the file is not found in all three directories.")
             return
 
         en    = load(path_en)
-        main  = load(path_main)
+        translation  = load(path_translation)
         patch = load(path_patch)
 
         # ── filters, but now we make *copies*, the main DF remains full
         sub_en    = en[  en["key"].str.strip()   != ""].iloc[1:]
-        sub_main  = main[main["key"].str.strip() != ""].iloc[1:]
+        # sub_main  = translation[translation["key"].str.strip() != ""].iloc[1:]
         sub_patch = patch[patch["key"].str.strip() != ""].iloc[1:]
 
         # we perform a quick lookup by key.
@@ -72,9 +72,9 @@ def main():
         patch_lookup = dict(zip(sub_patch["key"], sub_patch["text"]))
 
         updated = 0
-        for idx, row in main.iterrows():
+        for idx, row in translation.iterrows():
             k = row["key"]
-            text_main   = main.at[idx, "text"]        # take from the FULL DF
+            text_main   = translation.at[idx, "text"]        # take from the FULL DF
             text_en     = en_lookup.get(k, "")
             text_patch  = patch_lookup.get(k)
 
@@ -82,11 +82,11 @@ def main():
                     k and text_patch and text_patch != text_en and
                     (text_main == text_en or text_main == "")
             ):
-                main.at[idx, "text"] = text_patch
+                translation.at[idx, "text"] = text_patch
                 updated += 1
 
         if updated:
-            main.to_csv(path_main, sep="\t", index=False, na_rep="")
+            translation.to_csv(path_translation, sep="\t", index=False, na_rep="")
             print(f"✅ {file_name}: updated {updated} lines.")
         else:
             print(f"–  {file_name}: no translations required.")
