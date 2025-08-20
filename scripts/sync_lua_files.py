@@ -171,8 +171,8 @@ def main():
 
     # Define directories relative to project root
     cfg = read_config(args.project_root)
-    upstream_dir = resolve_path(cfg.project_root, args.upstream_dir) if args.upstream_dir else (cfg.upstream_db.parent.parent if cfg.upstream_db else cfg.project_root / "_upstream/en")
-    translation_dir = resolve_path(cfg.project_root, args.translation_dir) if args.translation_dir else (cfg.translation_db.parent.parent if cfg.translation_db else cfg.project_root / "translation")
+    upstream_dir = resolve_path(cfg.project_root, args.upstream_dir) if args.upstream_dir else cfg.upstream_dir
+    translation_dir = resolve_path(cfg.project_root, args.translation_dir) if args.translation_dir else cfg.lua_dir
 
     # Display script header and configuration
     print("Lua File Sync Script")

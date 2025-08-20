@@ -33,6 +33,8 @@ class Config:
     project_root: Path
     env_file: Path
     upstream_db: Path          # e.g. _upstream/en/text/db
+    upstream_dir: Path         # e.g. _upstream/en
+    lua_dir: Path              # e.g. lua_scripts
     translation_db: Path       # e.g. translation/text/db
     patch_db: Path | None      # optional
     obsolete_dir: Path         # e.g. _obsolete
@@ -45,12 +47,14 @@ class Config:
     dst: Path | None           # used by sync_translation.py; optional
 
 DEFAULTS = {
-    "UPSTREAM_DB":    "_upstream/en/text/db",
-    "TRANSLATION_DB": "translation/text/db",
-    "OBSOLETE_DIR":   "_obsolete",
-    "TEMP_DIR":       "_temp",
-    "DIR_UP2":       "_upstream/en/text/db",
-    "PATH_LUA_FILE":       "lua_scripts/frontend_strings.lua",
+    "UPSTREAM_DIR":         "_upstream/en",
+    "UPSTREAM_DB":          "_upstream/en/text/db",
+    "TRANSLATION_DB":       "translation/text/db",
+    "OBSOLETE_DIR":         "_obsolete",
+    "TEMP_DIR":             "_temp",
+    "DIR_UP2":              "_upstream/en/text/db",
+    "PATH_LUA_FILE":        "lua_scripts/frontend_strings.lua",
+    "LUA_DIR":              "lua_scripts",
     # "DST":          (no default; usually per-user)
     # "PATCH_DB":     (optional)
 }
@@ -70,6 +74,8 @@ def read_config(project_root: str | Path = ".", env_file: str | Path | None = No
     upstream_db    = resolve_path(pr, getv("UPSTREAM_DB", "UPSTREAM_DB"))
     translation_db = resolve_path(pr, getv("TRANSLATION_DB", "TRANSLATION_DB"))
     obsolete_dir   = resolve_path(pr, getv("OBSOLETE_DIR", "OBSOLETE_DIR"))
+    upstream_dir   = resolve_path(pr, getv("UPSTREAM_DIR", "UPSTREAM_DIR"))
+    lua_dir        = resolve_path(pr, getv("LUA_DIR", "LUA_DIR"))
     patch_db       = resolve_opt(pr, getv("PATCH_DB"))
     temp_dir       = resolve_opt(pr, getv("TEMP_DIR", "TEMP_DIR"))
     dir_up1        = resolve_opt(pr, getv("DIR_UP1"))
@@ -82,6 +88,8 @@ def read_config(project_root: str | Path = ".", env_file: str | Path | None = No
     return Config(
         project_root=pr,
         env_file=env,
+        upstream_dir=upstream_dir,
+        lua_dir=lua_dir,
         upstream_db=upstream_db,
         translation_db=translation_db,
         patch_db=patch_db,
