@@ -1,0 +1,45 @@
+#!/usr/bin/env python3
+import os, sys
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent  # subproject root
+
+def find_fw_scripts() -> Path:
+    # Standard layout first; allow override via FW_SCRIPTS
+    candidates = [ROOT / "../../scripts", Path(os.environ.get("FW_SCRIPTS", ""))]
+    for p in candidates:
+        if p and p.exists():
+            return p.resolve()
+    print("ERROR: cannot locate framework 'scripts' folder.\n"
+          "Keep ../../scripts relative layout or set FW_SCRIPTS to its absolute path.",
+          file=sys.stderr)
+    sys.exit(1)
+
+def run(module_name: str, argv: list[str]):
+    scripts = find_fw_scripts()
+    sys.path.insert(0, str(scripts))
+    mod = __import__(module_name)
+    # inject --project-root . if not provided
+    if not any(a in ("--project-root", "-p") for a in argv):
+        argv = ["--project-root", str(ROOT), *argv]
+    sys.argv = [f"{module_name}.py", *argv]
+    # every framework script should expose main()
+    mod.main()
+
+ALIASES = {
+    "merge-tsv": "merge_tsv",
+    "sync-translation": "sync_translation",
+    "translation-report": "translation_report",
+    "validate-tsv": "validate_tsv",
+}
+
+def main():
+    if len(sys.argv) < 2:
+        print("Usage: python tool <merge_tsv|merge-tsv|sync_translation|sync-translation> [args...]")
+        sys.exit(2)
+    cmd, *rest = sys.argv[1:]
+    module = ALIASES.get(cmd, cmd)  # allow dashed aliases
+    run(module, rest)
+
+if __name__ == "__main__":
+    main()

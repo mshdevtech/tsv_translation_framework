@@ -1,0 +1,7 @@
+repos:
+  - name: your_mod_1
+    url:  https://github.com/your_name/your_repo_name_1.git
+    branch: main
+  - name: your_mod_2
+    url:  https://github.com/your_name/your_repo_name_2.git
+    branch: main

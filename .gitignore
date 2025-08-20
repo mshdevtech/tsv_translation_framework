@@ -1,0 +1,20 @@
+# Ignore all files in the _upstream directory
+/example_subproject/_upstream/*
+!example_subproject/_upstream/.gitkeep
+
+# Ignore all files in the _obsolete directory
+/example_subproject/_obsolete/*
+!example_subproject/_obsolete/.gitkeep
+
+# ignore all files in the _temp directory
+/example_subproject/_temp/*
+!example_subproject/_temp/.gitkeep
+
+# Ignore .idea files
+/.idea/*
+
+# Ignore .env files
+.env
+
+# Ignore repos.yaml
+repos.yaml

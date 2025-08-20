@@ -1,0 +1,9 @@
+repos:
+  - repo: local
+    hooks:
+      - id: sync-translation
+        name: Sync Translation
+        pass_filenames: false
+        entry: python ../../scripts/sync_translation.py --project-root .
+        language: system
+        types: [file]

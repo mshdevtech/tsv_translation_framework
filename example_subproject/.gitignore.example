@@ -1,0 +1,23 @@
+# Ignore all files in the _upstream directory
+/_upstream/*
+
+# Ignore all files in the _obsolete directory
+/_obsolete/*
+
+# ignore all files in the _temp directory
+/_temp/*
+
+# Ignore .env files
+.env
+
+# Ignore .idea files
+/.idea/*
+
+# Ignore pre-commit hook files
+.pre-commit-config.yaml
+
+# Ignore this file itself
+.gitignore
+
+# Ignore Python run files
+run
