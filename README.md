@@ -93,12 +93,43 @@ Then use `scripts/sync_repos.sh` to clone or update all listed repos.
 
 ## Main Scripts & Usage
 
-All scripts are in the `scripts/` directory. Run them with `python scripts/<script>.py [options]`.
+All scripts are in the `scripts/` directory. You can run them in two ways:
+
+### Option 1: Direct Script Execution
+```bash
+python scripts/<script>.py [options]
+```
+
+### Option 2: Using the `run` Script (Recommended)
+Each translation project includes a `run` script that makes it easy to execute framework scripts:
+
+```bash
+# From within any translation project directory
+python run <script_name> [options]
+
+# Examples:
+python run translation_report
+python run merge_tsv
+python run validate_tsv
+python run sync_translation
+```
+
+**Available script aliases:**
+- `merge-tsv` or `merge_tsv` → merge_tsv.py
+- `sync-translation` or `sync_translation` → sync_translation.py
+- `translation-report` or `translation_report` → translation_report.py
+- `validate-tsv` or `validate_tsv` → validate_tsv.py
+
+**Note:** The `run` script automatically sets `--project-root .` for you, so you don't need to specify the project path manually.
 
 ### 1. **merge_tsv.py**
 Merge upstream (original) TSVs into your translation files, adding new keys and archiving removed ones.
 
 ```bash
+# Using run script (recommended)
+python run merge_tsv
+
+# Direct execution
 python scripts/merge_tsv.py --project-root translation/<project>
 ```
 
@@ -106,6 +137,10 @@ python scripts/merge_tsv.py --project-root translation/<project>
 Validate the structure of your TSV files (columns, duplicates, empty keys).
 
 ```bash
+# Using run script (recommended)
+python run validate_tsv
+
+# Direct execution
 python scripts/validate_tsv.py --project-root translation/<project>
 ```
 
@@ -113,6 +148,10 @@ python scripts/validate_tsv.py --project-root translation/<project>
 Sync your translation directory into the mod's target directory (for in-game testing).
 
 ```bash
+# Using run script (recommended)
+python run sync_translation --dst <mod_folder>
+
+# Direct execution
 python scripts/sync_translation.py --project-root translation/<project> --dst <mod_folder>
 ```
 Add `--dry-run` to preview actions.
@@ -121,6 +160,10 @@ Add `--dry-run` to preview actions.
 Split a master localisation file into separate files by DB structure.
 
 ```bash
+# Using run script (recommended)
+python run split_loc_master
+
+# Direct execution
 python scripts/split_loc_master.py --project-root translation/<project>
 ```
 
@@ -128,6 +171,11 @@ python scripts/split_loc_master.py --project-root translation/<project>
 Deduplicate translation strings for easier translation, then apply translations back.
 
 ```bash
+# Using run script (recommended)
+python run dedup_translate_tsv extract path/to/names.loc.tsv
+python run dedup_translate_tsv apply _dedup/names.loc._dedup.tsv path/to/names.loc.tsv
+
+# Direct execution
 # Extract deduplicated file
 python scripts/dedup_translate_tsv.py extract path/to/names.loc.tsv
 
@@ -139,6 +187,10 @@ python scripts/dedup_translate_tsv.py apply _dedup/names.loc._dedup.tsv path/to/
 Merge completed translations from a patch directory into your main translation files.
 
 ```bash
+# Using run script (recommended)
+python run merge_patch_translation
+
+# Direct execution
 python scripts/merge_patch_translation.py --project-root translation/<project>
 ```
 
@@ -146,6 +198,10 @@ python scripts/merge_patch_translation.py --project-root translation/<project>
 Synchronize Lua scripts from upstream to your translation folder, only replacing existing files.
 
 ```bash
+# Using run script (recommended)
+python run sync_lua_files
+
+# Direct execution
 python scripts/sync_lua_files.py --project-root translation/<project>
 ```
 
@@ -153,6 +209,10 @@ python scripts/sync_lua_files.py --project-root translation/<project>
 Convert TSV files to GNU PO format for use with standard translation tools.
 
 ```bash
+# Using run script (recommended)
+python run tsv2po --src <original.tsv> --trg <translated.tsv>
+
+# Direct execution
 python scripts/tsv2po.py --src <original.tsv> --trg <translated.tsv>
 ```
 
@@ -160,6 +220,10 @@ python scripts/tsv2po.py --src <original.tsv> --trg <translated.tsv>
 Generate a report of translation progress (total, translated, untranslated lines).
 
 ```bash
+# Using run script (recommended)
+python run translation_report
+
+# Direct execution
 python scripts/translation_report.py --project-root translation/<project>
 ```
 
